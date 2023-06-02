@@ -4,10 +4,10 @@ Welcome to this step-by-step guide to controlling the xiaomi smart air purifier 
 
 ## Requirements
 
-To use this setup, the following components need to be installed through the Home Assistant Community Store (HACS):
+To use this setup, the following components need to be installed through the <a href="https://hacs.xyz/" target="_blank">Home Assistant Community Store (HACS)</a>:
 
-1. [`lovelace-mushroom` by piitaya](https://github.com/piitaya/lovelace-mushroom)
-2. [`xiaomi-miot`](https://github.com/al-one/hass-xiaomi-miot)
+1. <a href="https://github.com/piitaya/lovelace-mushroom" target="_blank">`lovelace-mushroom` by piitaya</a>
+2. <a href="https://github.com/al-one/hass-xiaomi-miot" target="_blank">`xiaomi-miot`</a>
 
 If you're unfamiliar with HACS or how to integrate Xiaomi devices via miot into Home Assistant, please consult the guides online. Apart from these, you need the ability to modify your `configuration.yaml` file, which can be done either through the File editor add-on in Home Assistant or through Docker if that's your setup. Once you have integrated the purifier via the miot integration, you can start with the configuration below.
 
