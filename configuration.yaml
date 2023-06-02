@@ -1,0 +1,82 @@
+# Shows powerState, speed, mode
+sensor:
+  - platform: template
+    sensors:
+      bedroom_fan_combined:
+        friendly_name: "Bedroom Fan Combined"
+        value_template: "{{ states('fan.YOUR_XIAOMI_FAN_ENTITY') }}, 
+        {{ states.fan.YOUR_DESIRED_FAN_NAME.attributes.percentage }}%, 
+        {{ states.input_select.air_purifier_mode.state }}"
+
+# Fan oscillation modes (without sleep mode)
+input_select:
+  air_purifier_mode:
+    name: Air Purifier Mode
+    options:
+      - "auto"
+      - "favorite"
+    initial: "auto"
+
+# Automation to correctly update state of fan oscillation modes
+alias: FanInit
+description: Set Input Select based on Air Purifier Mode
+trigger:
+  - platform: homeassistant
+    event: start
+  - platform: template
+    value_template: "{{ state_attr('fan.YOUR_XIAOMI_FAN_ENTITY', 'air_purifier.mode') }}"
+condition: []
+action:
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.air_purifier_mode
+    data_template:
+      option: >
+        {% set modes = { 0: 'Auto', 2: 'Favorite' } %} {{
+        modes[state_attr('fan.YOUR_XIAOMI_FAN_ENTITY',
+        'air_purifier.mode')] }}
+mode: single
+
+# Actual entity for smart air purifier
+fan:
+  - platform: template
+    fans:
+      bedroom_fan:
+        friendly_name: "Bedroom fan"
+        value_template: "{{ is_state('fan.YOUR_XIAOMI_FAN_ENTITY', 'on') }}"
+        percentage_template: >-
+          {% if is_state('input_select.air_purifier_mode', 'auto') %}
+            {{ ((state_attr('fan.YOUR_XIAOMI_FAN_ENTITY', 'custom_service.moto_speed_rpm') - 400)
+            / (2050 - 400)) * 100 | round(0, 'floor') }}
+          {% else %}
+            {{ (states('number.YOUR_XIAOMI_FAN_ENTITY_favorite_level') | int) * (100/14) }}
+          {% endif %}
+        preset_mode_template: "{{ states('input_select.air_purifier_mode') }}"
+        oscillating_template: "{{ states('input_select.air_purifier_mode') }}"
+        turn_on:
+          service: fan.turn_on
+          target:
+            entity_id: fan.YOUR_XIAOMI_FAN_ENTITY
+        turn_off:
+          service: fan.turn_off
+          target:
+            entity_id: fan.YOUR_XIAOMI_FAN_ENTITY
+        set_percentage:
+          service: number.set_value
+          target:
+            entity_id: number.YOUR_XIAOMI_FAN_ENTITY_favorite_level
+          data:
+            value: "{{ (percentage * 14) / 100 | round(0, 'floor') }}"
+        set_oscillating:
+          - service: input_select.select_next
+            target:
+              entity_id: input_select.air_purifier_mode
+          - service: fan.set_preset_mode
+            target:
+              entity_id: fan.YOUR_XIAOMI_FAN_ENTITY
+            data_template:
+              preset_mode: "{{ states('input_select.air_purifier_mode') }}"
+        speed_count: 15
+        preset_modes:
+          - 'auto'
+          - 'favorite'
