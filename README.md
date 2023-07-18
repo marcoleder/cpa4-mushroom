@@ -1,5 +1,5 @@
 # Control air purifier 4 compact with mushroom fan card
-
+![preview](https://github.com/marcoleder/cpa4-mushroom/assets/32636827/5e71cdd7-22e3-4365-a483-dfc6f0c78f3b)\
 Welcome to this step-by-step guide to controlling the xiaomi smart air purifier 4 compact using the mushroom fan card in Home Assistant. This guide is based on using Home Assistant's <a href="https://www.home-assistant.io/integrations/fan.template" target="_blank">fan template</a> to create a custom fan entity, which allows for better integration with the mushroom fan card (ability to control speed and modes).
 
 ## Requirements
