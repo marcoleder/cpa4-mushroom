@@ -132,3 +132,5 @@ Please remember that this is still a work in progress. Feedback and suggestions 
 
 ## Disclaimer
 The sensor creation is an optional step but is a nice addition. Please note that the "Sleep" mode is excluded from the `input_select` options, as it is controlled via automation on the original fan entity and not the custom one we create. The author of this guide is not responsible for any loss of functionality or data due to following these instructions.
+
+License: MIT
