@@ -19,17 +19,9 @@ Remember to replace fan.YOUR_XIAOMI_FAN_ENTITY and fan.YOUR_DESIRED_FAN_NAME wit
 Copy the provided YAML code into your Home Assistant's `configuration.yaml` file.
 
 The `sensor` section creates a combined sensor that shows the fan's power state, speed, and mode.
-```yaml
-# Shows powerState, speed, mode
-sensor:
-  - platform: template
-    sensors:
-      bedroom_fan_combined:
-        friendly_name: "Bedroom Fan Combined"
-        value_template: "{{ states('fan.YOUR_XIAOMI_FAN_ENTITY') }}, 
-        {{ states.fan.YOUR_DESIRED_FAN_NAME.attributes.percentage }}%, 
-        {{ states.input_select.air_purifier_mode.state }}"
-```
+It has been migrated from sensor: - platform: template to the new syntax to accomodate version 2026.x.x breaking changes.
+Its implementation is now directly in the fan section at the end of this section (Step 1).
+
 ---
 The `input_select` provides a way to switch between different modes ("auto" and "favorite").
 ```yaml
@@ -67,50 +59,55 @@ mode: single
 ```
 ---
 The `fan` section is where the magic happens. Here, a new fan entity is created based on the fan template from Home Assistant. This entity can be directly controlled by the Mushroom Fan Card.
+It has been migrated to comply with version 2026.x.x and the therein introduced breaking changes from fan: - platform: template to template: - fan: and the sensor has been directly included as well.
 ```yaml
 # Actual entity for smart air purifier
-fan:
-  - platform: template
-    fans:
-      bedroom_fan:
-        friendly_name: "Bedroom fan"
-        value_template: "{{ is_state('fan.YOUR_XIAOMI_FAN_ENTITY', 'on') }}"
-        percentage_template: >-
-          {% if is_state('input_select.air_purifier_mode', 'auto') %}
-            {{ ((state_attr('fan.YOUR_XIAOMI_FAN_ENTITY', 'custom_service.moto_speed_rpm') - 400)
-            / (2050 - 400)) * 100 | round(0, 'floor') }}
-          {% else %}
-            {{ (states('number.YOUR_XIAOMI_FAN_ENTITY_favorite_level') | int) * (100/14) }}
-          {% endif %}
-        preset_mode_template: "{{ states('input_select.air_purifier_mode') }}"
-        oscillating_template: "{{ states('input_select.air_purifier_mode') }}"
-        turn_on:
-          service: fan.turn_on
-          target:
-            entity_id: fan.YOUR_XIAOMI_FAN_ENTITY
-        turn_off:
-          service: fan.turn_off
-          target:
-            entity_id: fan.YOUR_XIAOMI_FAN_ENTITY
-        set_percentage:
-          service: number.set_value
-          target:
-            entity_id: number.YOUR_XIAOMI_FAN_ENTITY_favorite_level
-          data:
-            value: "{{ (percentage * 14) / 100 | round(0, 'floor') }}"
-        set_oscillating:
-          - service: input_select.select_next
-            target:
-              entity_id: input_select.air_purifier_mode
-          - service: fan.set_preset_mode
-            target:
-              entity_id: fan.YOUR_XIAOMI_FAN_ENTITY
-            data_template:
-              preset_mode: "{{ states('input_select.air_purifier_mode') }}"
-        speed_count: 15
-        preset_modes:
-          - 'auto'
-          - 'favorite'
+template:
+  - fan:
+    - unique_id: bedroom_fan
+      turn_on:
+      - target:
+          entity_id:
+          - fan.zhimi_cpa4_e409_air_purifier
+        action: fan.turn_on
+      turn_off:
+      - target:
+          entity_id:
+          - fan.zhimi_cpa4_e409_air_purifier
+        action: fan.turn_off
+      set_percentage:
+      - target:
+          entity_id:
+          - number.zhimi_cpa4_e409_favorite_level
+        data:
+          value: '{{ (percentage * 14) / 100 | round(0, ''floor'') }}'
+        action: number.set_value
+      set_oscillating:
+      - target:
+          entity_id:
+          - input_select.air_purifier_mode
+        action: input_select.select_next
+      - target:
+          entity_id:
+          - fan.zhimi_cpa4_e409_air_purifier
+        data_template:
+          preset_mode: '{{ states(''input_select.air_purifier_mode'') }}'
+        action: fan.set_preset_mode
+      speed_count: 15
+      preset_modes:
+      - auto
+      - favorite
+      default_entity_id: fan.bedroom_fan
+      name: Bedroom fan
+      oscillating: '{{ states(''input_select.air_purifier_mode'') }}'
+      percentage: "{% if is_state('input_select.air_purifier_mode', 'auto') %}\n  {{((state_attr('fan.zhimi_cpa4_e409_air_purifier', 'custom_service.moto_speed_rpm') - 400)\n  / (2050 - 400)) * 100 | round(0, 'floor') }}\n{% else %}\n  {{ (states('number.zhimi_cpa4_e409_favorite_level') | int) * (100/14) }}\n{% endif %}"
+      preset_mode: '{{ states(''input_select.air_purifier_mode'') }}'
+      state: '{{ is_state(''fan.zhimi_cpa4_e409_air_purifier'', ''on'') }}'
+  # Shows powerState, speed, mode
+  - sensor:
+    - default_entity_id: sensor.bedroom_fan_combined
+      name: Bedroom Fan Combined
+      state: '{{ states(''fan.zhimi_cpa4_e409_air_purifier'') }}, {{ states.fan.bedroom_fan.attributes.percentage }}%, {{ states.input_select.air_purifier_mode.state }}'
 ```
 ### Step 2: Creating Frontend Card
 Create a new card in your Lovelace UI using the provided YAML code. This card enables control over the Xiaomi Smart Air Purifier through the mushroom fan card.
@@ -134,3 +131,4 @@ Please remember that this is still a work in progress. Feedback and suggestions 
 The sensor creation is an optional step but is a nice addition. Please note that the "Sleep" mode is excluded from the `input_select` options, as it is controlled via automation on the original fan entity and not the custom one we create. The author of this guide is not responsible for any loss of functionality or data due to following these instructions.
 
 License: MIT
+
